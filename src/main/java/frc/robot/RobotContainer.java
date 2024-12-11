@@ -13,7 +13,10 @@
 
 package frc.robot;
 
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import com.pathplanner.lib.auto.AutoBuilder;
+
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,7 +27,9 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveIO;
 import frc.robot.subsystems.drive.DriveIOSim;
 import frc.robot.subsystems.drive.DriveIOSparkMax;
-import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.shooter.ShooterIOSim;
+import frc.robot.subsystems.shooter.ShooterIOSparkMax;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -35,6 +40,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 public class RobotContainer {
   // Subsystems
   private final Drive drive;
+  private Shooter shooter; //TODO: Figure out a way to make it a final var
 
   // Controller
   private final CommandXboxController controller = new CommandXboxController(0);
@@ -48,6 +54,7 @@ public class RobotContainer {
       case REAL:
         // Real robot, instantiate hardware IO implementations
         drive = new Drive(new DriveIOSparkMax());
+        shooter = new Shooter(new ShooterIOSparkMax());
         // drive = new Drive(new DriveIOTalonFX());
         // flywheel = new Flywheel(new FlywheelIOTalonFX());
         break;
@@ -55,6 +62,7 @@ public class RobotContainer {
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
         drive = new Drive(new DriveIOSim());
+        shooter = new Shooter(new ShooterIOSim());
         break;
 
       default:
@@ -93,6 +101,9 @@ public class RobotContainer {
         Commands.run(
             () -> drive.driveArcade(-controller.getLeftY() * 1, -controller.getRightX() * 1),
             drive));
+    controller.a().whileTrue(shooter.manualShootVolts(6.0));
+    controller.leftTrigger(0.1).whileTrue(shooter.manualShoot(controller.getLeftTriggerAxis()));
+    controller.b().whileTrue(shooter.stop());
   }
 
   /**
